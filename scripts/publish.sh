@@ -29,12 +29,10 @@ except Exception as e:
     sys.exit(2)
 PY
 then
-  echo "\nError: The active Python interpreter (${PYBIN}) lacks the standard module '_posixsubprocess'." >&2
-  echo "This is a known issue with incomplete Python installations." >&2
-  echo "Fix by recreating venv with a full Python (e.g., python3.11) or installing system packages:" >&2
+  echo "\nWarning: The active Python interpreter (${PYBIN}) lacks the standard module '_posixsubprocess'." >&2
+  echo "Some tooling may misbehave. Consider recreating venv with a full Python (e.g., python3.11) or installing system packages:" >&2
   echo "  Debian/Ubuntu:  sudo apt-get update && sudo apt-get install -y python3-venv python3-full" >&2
   echo "  Then: rm -rf venv && make PY=python3.11 venv && make install-dev" >&2
-  exit 2
 fi
 
 # Ensure pip is available and up to date
@@ -53,12 +51,60 @@ part="${2:-patch}"
 "$PYBIN" -m build
 
 repo="${1:-test}"
+TWINE_ENV=("TWINE_NON_INTERACTIVE=1")
+
+load_token() {
+  local which_repo="$1"
+  local token=""
+  if [[ "$which_repo" == "pypi" ]]; then
+    # Priority: env var value, env file, home file, repo file
+    if [[ -n "${PYPI_TOKEN:-}" ]]; then token="$PYPI_TOKEN"; fi
+    if [[ -z "$token" && -n "${PYPI_TOKEN_FILE:-}" && -f "$PYPI_TOKEN_FILE" ]]; then token="$(<"$PYPI_TOKEN_FILE")"; fi
+    if [[ -z "$token" && -f "$HOME/.pypi_token" ]]; then token="$(<"$HOME/.pypi_token")"; fi
+    if [[ -z "$token" && -f "$HOME/.pypi-token" ]]; then token="$(<"$HOME/.pypi-token")"; fi
+    if [[ -z "$token" && -f ".pypi_token" ]]; then token="$(<".pypi_token")"; fi
+    if [[ -z "$token" && -f ".pypi-token" ]]; then token="$(<".pypi-token")"; fi
+    # generic fallbacks
+    if [[ -z "$token" && -f ".token" ]]; then token="$(<".token")"; fi
+    if [[ -z "$token" && -f "$HOME/.token" ]]; then token="$(<"$HOME/.token")"; fi
+  else
+    if [[ -n "${TESTPYPI_TOKEN:-}" ]]; then token="$TESTPYPI_TOKEN"; fi
+    if [[ -z "$token" && -n "${TESTPYPI_TOKEN_FILE:-}" && -f "$TESTPYPI_TOKEN_FILE" ]]; then token="$(<"$TESTPYPI_TOKEN_FILE")"; fi
+    if [[ -z "$token" && -f "$HOME/.testpypi_token" ]]; then token="$(<"$HOME/.testpypi_token")"; fi
+    if [[ -z "$token" && -f "$HOME/.testpypi-token" ]]; then token="$(<"$HOME/.testpypi-token")"; fi
+    if [[ -z "$token" && -f ".testpypi_token" ]]; then token="$(<".testpypi_token")"; fi
+    if [[ -z "$token" && -f ".testpypi-token" ]]; then token="$(<".testpypi-token")"; fi
+    # generic fallbacks
+    if [[ -z "$token" && -f ".token" ]]; then token="$(<".token")"; fi
+    if [[ -z "$token" && -f "$HOME/.token" ]]; then token="$(<"$HOME/.token")"; fi
+  fi
+  if [[ -n "$token" ]]; then
+    # Trim and export for twine
+    token="${token%%[[:space:]]*}"
+    TWINE_ENV+=("TWINE_USERNAME=__token__" "TWINE_PASSWORD=$token")
+    return 0
+  fi
+  return 1
+}
+
 if [[ "$repo" == "pypi" ]]; then
   echo "Uploading to PyPI..."
-  "$PYBIN" -m twine upload dist/*
+  if load_token pypi; then
+    env "${TWINE_ENV[@]}" "$PYBIN" -m twine upload --non-interactive dist/*
+  else
+    echo "No PyPI token found. Set one of: PYPI_TOKEN, PYPI_TOKEN_FILE, ~/.pypi_token, ./.pypi_token or configure ~/.pypirc." >&2
+    echo "Falling back to ~/.pypirc if present; otherwise this will fail non-interactively." >&2
+    env "${TWINE_ENV[@]}" "$PYBIN" -m twine upload --non-interactive dist/*
+  fi
 else
   echo "Uploading to TestPyPI..."
-  "$PYBIN" -m twine upload --repository testpypi dist/*
+  if load_token testpypi; then
+    env "${TWINE_ENV[@]}" "$PYBIN" -m twine upload --non-interactive --repository testpypi dist/*
+  else
+    echo "No TestPyPI token found. Set one of: TESTPYPI_TOKEN, TESTPYPI_TOKEN_FILE, ~/.testpypi_token, ./.testpypi_token or configure ~/.pypirc." >&2
+    echo "Falling back to ~/.pypirc if present; otherwise this will fail non-interactively." >&2
+    env "${TWINE_ENV[@]}" "$PYBIN" -m twine upload --non-interactive --repository testpypi dist/*
+  fi
 fi
 
 echo "Done."

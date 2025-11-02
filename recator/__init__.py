@@ -7,7 +7,7 @@ from .detector import DuplicateDetector
 from .refactor import CodeRefactor
 from .analyzer import CodeAnalyzer
 
-__version__ = "0.1.0"
+__version__ = "0.1.3"
 __all__ = ["CodeScanner", "DuplicateDetector", "CodeRefactor", "CodeAnalyzer", "Recator"]
 
 

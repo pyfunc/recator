@@ -58,6 +58,16 @@ recator /path/to/project -v --min-lines 6 --threshold 0.9
 # Preview refactoring suggestions
 recator /path/to/project --refactor
 
+# Show duplicate code snippets (first N) during analysis
+recator /path/to/project --analyze --show-snippets --max-show 5 -v
+
+# Interactive selection of duplicates to refactor (dry-run preview)
+recator /path/to/project --refactor --interactive --dry-run
+
+# Refactor on demand by selecting duplicates (IDs or ranges)
+# Example selects IDs 1, 3, 4, 5
+recator /path/to/project --refactor --select 1,3-5 --dry-run
+
 # Apply refactoring (creates .refactored files)
 recator /path/to/project --refactor --apply
 
@@ -69,6 +79,16 @@ recator /path/to/project --exclude "*.test.js" "build/*"
 
 # Save results to JSON
 recator /path/to/project --output results.json
+
+# Show duplicate code snippets (once per duplicate) and all occurrences
+recator /path/to/project --analyze --show-snippets --max-show 0 --max-blocks 0 -v
+
+# Suppress overlapping/near-identical groups (default) vs show all
+recator /path/to/project --analyze -v                         # suppressed
+recator /path/to/project --analyze -v --no-suppress-duplicates  # no suppression
+
+# Control snippet preview size in verbose mode
+recator /path/to/project --analyze -v --snippet-lines 12
 ```
 
 ### Python API
@@ -231,6 +251,35 @@ Create a `recator.json` configuration file:
 ```
 
 Use with: `recator /path/to/project --config recator.json`
+
+## 🧪 Examples
+
+See `examples/1/` for a minimal TypeScript example with intentionally duplicated blocks:
+
+```bash
+# From repository root
+recator examples/1 --analyze --languages javascript \
+  --min-lines 7 --min-tokens 15 \
+  --show-snippets --max-show 0 --max-blocks 0 -v
+
+# Interactive refactor preview for selected duplicates
+recator examples/1 --refactor --interactive --dry-run --show-snippets
+
+# Compare suppression behavior
+recator examples/1 --analyze --languages javascript --min-lines 7 -v
+recator examples/1 --analyze --languages javascript --min-lines 7 -v --no-suppress-duplicates
+```
+
+## 🧩 Duplicate Snippet Display & On-demand Refactor
+
+- **Show snippets:** Use `--show-snippets` with `--analyze` to print representative code blocks for duplicates (e.g., exact blocks or token previews). Control output size with `--max-show`.
+- **On-demand refactor:** Use `--interactive` to choose duplicates interactively, or `--select 1,3-5` to pass IDs directly. Combine with `--refactor` and `--dry-run` for a safe preview. Use `--apply --no-dry-run` to apply changes where supported.
+
+Tip: Start with stricter thresholds and increase gradually to avoid excessive output on large codebases.
+
+## 🧱 Portability Notes
+
+Recator uses a pure-Python, stable 64-bit hashing (FNV-1a) to identify identical fragments. This avoids reliance on OpenSSL-backed `hashlib` algorithms, so it works even in environments where `md5/sha*` are unavailable.
 
 ## 🏗️ Architecture
 

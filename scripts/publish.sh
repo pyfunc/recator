@@ -3,8 +3,8 @@ set -euo pipefail
 
 # Publish script for Recator
 # Usage:
-#  ./scripts/publish.sh test   # upload to TestPyPI
-#  ./scripts/publish.sh pypi   # upload to PyPI
+#  ./scripts/publish.sh test [patch|minor|major]   # upload to TestPyPI
+#  ./scripts/publish.sh pypi [patch|minor|major]   # upload to PyPI
 # Requires: build, twine, and a configured ~/.pypirc or TWINE_* env vars
 
 repo_root="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
@@ -22,6 +22,10 @@ python -m pip install build twine
 
 # Clean previous artifacts
 rm -rf dist/ build/ *.egg-info || true
+
+# Bump version (default: patch)
+part="${2:-patch}"
+python scripts/bump_version.py "$part"
 
 # Build sdist and wheel
 python -m build

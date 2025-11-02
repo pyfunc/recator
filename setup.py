@@ -4,14 +4,25 @@ Setup script for Recator - Code Duplicate Detection and Refactoring Library
 
 from setuptools import setup, find_packages
 from pathlib import Path
+import re
 
 # Read the README file
 this_directory = Path(__file__).parent
 long_description = (this_directory / "README.md").read_text() if (this_directory / "README.md").exists() else ""
 
+def read_version() -> str:
+    init_py = this_directory / "recator" / "__init__.py"
+    if not init_py.exists():
+        return "0.0.0"
+    text = init_py.read_text(encoding="utf-8")
+    m = re.search(r"^__version__\s*=\s*['\"]([^'\"]+)['\"]", text, re.M)
+    if not m:
+        raise RuntimeError("Could not find __version__ in recator/__init__.py")
+    return m.group(1)
+
 setup(
     name="recator",
-    version="0.1.0",
+    version=read_version(),
     author="Recator Team",
     author_email="recator@example.com",
     description="Automated code duplicate detection and refactoring library",

@@ -2,14 +2,18 @@
 
 .PHONY: help clean build test venv install-dev publish-test publish
 
+# Bump part for versioning on publish: patch (default), minor, or major
+PART ?= patch
+
 help:
 	@echo "Targets:"
 	@echo "  make venv           - create local venv in venv"
 	@echo "  make install-dev    - install package in editable mode with dev deps"
 	@echo "  make build          - build sdist and wheel"
 	@echo "  make test           - run pytest"
-	@echo "  make publish-test   - upload to TestPyPI"
-	@echo "  make publish        - upload to PyPI"
+	@echo "  make publish-test   - upload to TestPyPI (auto-bump: $(PART))"
+	@echo "  make publish        - upload to PyPI (auto-bump: $(PART))"
+	@echo "Variables: PART=patch|minor|major (default: patch)"
 	@echo "  make clean          - remove build artifacts"
 
 venv:
@@ -28,11 +32,11 @@ test:
 
 publish-test:
 	chmod +x scripts/publish.sh
-	. venv/bin/activate; ./scripts/publish.sh test
+	. venv/bin/activate; ./scripts/publish.sh test $(PART)
 
 publish:
 	chmod +x scripts/publish.sh
-	. venv/bin/activate; ./scripts/publish.sh pypi
+	. venv/bin/activate; ./scripts/publish.sh pypi $(PART)
 
 clean:
 	rm -rf build/ dist/ *.egg-info **/*.egg-info

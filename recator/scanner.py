@@ -15,6 +15,8 @@ class CodeScanner:
     LANGUAGE_EXTENSIONS = {
         'python': ['.py'],
         'javascript': ['.js', '.jsx', '.ts', '.tsx'],
+        'html': ['.html', '.htm'],
+        'css': ['.css', '.scss', '.sass', '.less', '.styl'],
         'java': ['.java'],
         'cpp': ['.cpp', '.cc', '.cxx', '.hpp', '.h'],
         'c': ['.c', '.h'],

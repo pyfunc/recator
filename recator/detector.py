@@ -6,7 +6,7 @@ import re
 import difflib
 from typing import List, Dict, Tuple, Set
 from collections import defaultdict
-import hashlib
+from .hashing import stable_hash_text, stable_hash_tokens
 
 
 class DuplicateDetector:
@@ -94,7 +94,7 @@ class DuplicateDetector:
                     continue
                 
                 block_text = '\n'.join(block)
-                block_hash = hashlib.md5(block_text.encode()).hexdigest()
+                block_hash = stable_hash_text(block_text)
                 
                 block_hashes[block_hash].append({
                     'file': file_data['path'],
@@ -131,7 +131,7 @@ class DuplicateDetector:
             # Create token subsequences
             for i in range(len(tokens) - self.min_tokens + 1):
                 subseq = tokens[i:i + self.min_tokens]
-                subseq_hash = hashlib.md5(' '.join(subseq).encode()).hexdigest()
+                subseq_hash = stable_hash_tokens(subseq)
                 
                 token_groups[subseq_hash].append({
                     'file': file_data['path'],
@@ -314,7 +314,7 @@ class DuplicateDetector:
         """Compute hash of content"""
         # Normalize whitespace
         normalized = re.sub(r'\s+', ' ', content.strip())
-        return hashlib.sha256(normalized.encode()).hexdigest()
+        return stable_hash_text(normalized)
     
     def _merge_duplicate_groups(self, all_duplicates: List[Dict]) -> List[Dict]:
         """Merge overlapping duplicate groups"""

@@ -4,7 +4,7 @@
 
 help:
 	@echo "Targets:"
-	@echo "  make venv           - create local venv in .venv"
+	@echo "  make venv           - create local venv in venv"
 	@echo "  make install-dev    - install package in editable mode with dev deps"
 	@echo "  make build          - build sdist and wheel"
 	@echo "  make test           - run pytest"
@@ -13,26 +13,26 @@ help:
 	@echo "  make clean          - remove build artifacts"
 
 venv:
-	python3 -m venv .venv
-	. .venv/bin/activate; pip install -U pip
+	python3 -m venv venv
+	. venv/bin/activate; pip install -U pip
 
 install-dev:
-	. .venv/bin/activate; pip install -e ".[dev]"
+	. venv/bin/activate; pip install -e ".[dev]"
 
 build:
-	. .venv/bin/activate; python -m pip install build
-	. .venv/bin/activate; python -m build
+	. venv/bin/activate; python -m pip install build
+	. venv/bin/activate; python -m build
 
 test:
-	. .venv/bin/activate; pytest -q
+	. venv/bin/activate; pytest -q
 
 publish-test:
 	chmod +x scripts/publish.sh
-	. .venv/bin/activate; ./scripts/publish.sh test
+	. venv/bin/activate; ./scripts/publish.sh test
 
 publish:
 	chmod +x scripts/publish.sh
-	. .venv/bin/activate; ./scripts/publish.sh pypi
+	. venv/bin/activate; ./scripts/publish.sh pypi
 
 clean:
 	rm -rf build/ dist/ *.egg-info **/*.egg-info

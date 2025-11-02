@@ -3,10 +3,10 @@ Code analyzer module for parsing and tokenizing source code
 """
 
 import re
-import hashlib
 from typing import List, Dict, Tuple
 import ast
 import json
+from .hashing import stable_hash_tokens
 
 
 class CodeAnalyzer:
@@ -194,8 +194,7 @@ class CodeAnalyzer:
     
     def compute_hash(self, tokens: List[str]) -> str:
         """Compute hash for token sequence"""
-        token_str = ' '.join(tokens)
-        return hashlib.md5(token_str.encode()).hexdigest()
+        return stable_hash_tokens(tokens)
 
 
 class GenericTokenizer:

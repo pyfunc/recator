@@ -1,8 +1,19 @@
 include README.md
 include LICENSE
 include requirements.txt
-include test_example.py
+include pyproject.toml
 recursive-include recator *.py
 recursive-exclude * __pycache__
 recursive-exclude * *.py[co]
 recursive-exclude * .git*
+# Exclude top-level modules (the real package is under recator/)
+exclude __init__.py
+exclude analyzer.py
+exclude detector.py
+exclude scanner.py
+exclude refactor.py
+exclude cli.py
+exclude quick_start.py
+exclude test_example.py
+# Optionally, exclude tests from sdist
+prune tests

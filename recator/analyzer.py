@@ -142,7 +142,7 @@ class CodeAnalyzer:
         blocks = []
         
         # Method pattern
-        method_pattern = r'(public|private|protected)?\s*(static)?\s*\w+\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+\w+(?:\s*,\s*\w+)*)?\s*{'
+        method_pattern = r'(public|private|protected)?\s*(static)?\s*\w+\s+(\w+)\s*\([^)]*\)\s*(?:throws\s+\w+(?:\s*,\s*\w+)*)?\s*{' 
         
         for match in re.finditer(method_pattern, content):
             name = match.group(3)

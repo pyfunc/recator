@@ -3,7 +3,7 @@
 **Recator** - Automated code duplicate detection and refactoring library for Python
 
 [![Python Version](https://img.shields.io/badge/python-3.7%2B-blue)](https://www.python.org/downloads/)
-[![License](https://img.shields.io/badge/license-MIT-green)](LICENSE)
+[![License](https://img.shields.io/badge/license-Apache%202.0-green)](LICENSE)
 
 ## 📋 Overview
 
@@ -33,7 +33,7 @@ Recator is a powerful Python library that automatically detects and refactors co
 pip install recator
 
 # Or install from source
-git clone https://github.com/yourusername/recator.git
+git clone https://github.com/pyfunc/recator.git
 cd recator
 pip install -e .
 
@@ -273,7 +273,7 @@ Contributions are welcome! Please feel free to submit a Pull Request.
 
 ## 📄 License
 
-This project is licensed under theApacheLicense.
+This project is licensed under the Apache License 2.0.
 
 ## 🙏 Acknowledgments
 

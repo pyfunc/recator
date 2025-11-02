@@ -36,7 +36,7 @@ class Recator:
             'min_lines': 4,  # Minimum lines for duplicate detection
             'min_tokens': 30,  # Minimum tokens for duplicate detection
             'similarity_threshold': 0.85,  # Similarity threshold (0-1)
-            'languages': ['python', 'javascript', 'java', 'cpp', 'c'],
+            'languages': ['python', 'javascript', 'java', 'cpp', 'c', 'html', 'css'],
             'exclude_patterns': ['*.min.js', '*.min.css', 'node_modules/*', '.git/*'],
             'safe_mode': True,  # Don't modify files automatically, create .refactored versions
         }

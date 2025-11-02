@@ -58,7 +58,7 @@ def print_results(results, verbose=False, show_snippets=False, max_show=10, snip
                     fpath0 = str(Path(first_b.get('file', '')).resolve())
                     code0 = (first_b.get('content', '') or '').strip()
                     if code0:
-                        lang0 = lang_for_path(fpath0)
+                        lang0 = 'css' if dup.get('type') == 'css_block' else lang_for_path(fpath0)
                         if show_snippets:
                             print("      Snippet:")
                             print("\n" + f"```{lang0}\n" + code0 + "\n```" + "\n")
@@ -175,6 +175,10 @@ def guess_fence_language(dup: dict) -> str:
             return 'ts'
         if p.endswith(('.js', '.jsx')):
             return 'js'
+        if p.endswith(('.css', '.scss', '.sass', '.less', '.styl')):
+            return 'css'
+        if p.endswith(('.html', '.htm')):
+            return 'html'
         if p.endswith('.py'):
             return 'python'
         if p.endswith(('.java',)):
@@ -266,6 +270,10 @@ def lang_for_path(path: str) -> str:
         return 'ts'
     if p.endswith(('.js', '.jsx')):
         return 'js'
+    if p.endswith(('.css', '.scss', '.sass', '.less', '.styl')):
+        return 'css'
+    if p.endswith(('.html', '.htm')):
+        return 'html'
     if p.endswith('.py'):
         return 'python'
     if p.endswith(('.java',)):
@@ -343,7 +351,7 @@ def main():
     parser.add_argument('--min-lines', type=int, default=4, help='Minimum lines for duplicate detection (default: 4)')
     parser.add_argument('--min-tokens', type=int, default=30, help='Minimum tokens for duplicate detection (default: 30)')
     parser.add_argument('--threshold', type=float, default=0.85, help='Similarity threshold (0-1) for fuzzy matching (default: 0.85)')
-    parser.add_argument('--languages', nargs='+', default=['python', 'javascript', 'java'], help='Programming languages to analyze (default: python javascript java)')
+    parser.add_argument('--languages', nargs='+', default=['python', 'javascript', 'java', 'html', 'css'], help='Programming languages to analyze (default: python javascript java html css)')
     parser.add_argument('--exclude', nargs='+', default=['*.min.js', 'node_modules/*', '.git/*'], help='Patterns to exclude from analysis')
     parser.add_argument('--output', type=str, help='Output results to JSON file')
     parser.add_argument('--config', type=str, help='Path to configuration file (JSON)')

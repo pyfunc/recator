@@ -42,9 +42,10 @@ class DuplicateDetector:
         token = self.find_token_duplicates(parsed_files)
         fuzzy = self.find_fuzzy_duplicates(parsed_files)
         structural = self.find_structural_duplicates(parsed_files)
+        css_dups = self.find_css_duplicates(parsed_files)
         
         # Merge and deduplicate results
-        all_duplicates = exact + token + fuzzy + structural
+        all_duplicates = exact + token + fuzzy + structural + css_dups
         duplicates = self._merge_duplicate_groups(all_duplicates)
         
         return duplicates
@@ -315,6 +316,95 @@ class DuplicateDetector:
         # Normalize whitespace
         normalized = re.sub(r'\s+', ' ', content.strip())
         return stable_hash_text(normalized)
+
+    # ---------------- CSS duplicate detection -----------------
+
+    def find_css_duplicates(self, parsed_files: List[Dict]) -> List[Dict]:
+        """Find exact CSS duplicate blocks across file types (.css, <style> in HTML, CSS-in-JS in TS/JS).
+        Uses normalization to ignore whitespace and comments.
+        """
+        groups = defaultdict(list)
+        for file_data in parsed_files:
+            segments = self._extract_css_segments(file_data)
+            for seg in segments:
+                text = seg['content']
+                if not text:
+                    continue
+                line_count = text.count('\n') + 1
+                if line_count < self.min_lines:
+                    continue
+                norm = self._normalize_css_text(text)
+                if not norm.strip():
+                    continue
+                h = stable_hash_text(norm)
+                groups[h].append({
+                    'file': file_data['path'],
+                    'start_line': seg['start_line'],
+                    'end_line': seg['end_line'],
+                    'content': text.strip(),
+                })
+
+        duplicates = []
+        for h, blocks in groups.items():
+            if len(blocks) > 1:
+                duplicates.append({
+                    'type': 'css_block',
+                    'hash': h,
+                    'blocks': blocks,
+                    'count': len(blocks),
+                    'lines': max(1, blocks[0]['end_line'] - blocks[0]['start_line'] + 1),
+                    'confidence': 1.0,
+                })
+        return duplicates
+
+    def _extract_css_segments(self, file_data: Dict) -> List[Dict]:
+        """Extract CSS segments from different file types.
+        Returns list of dicts with keys: start_line, end_line, content
+        """
+        content = file_data.get('content', '')
+        ext = (file_data.get('extension') or '').lower()
+        language = file_data.get('language', '')
+        segments = []
+
+        # Whole CSS-like files
+        if ext in {'.css', '.scss', '.sass', '.less', '.styl'}:
+            lines = content.splitlines()
+            segments.append({'start_line': 1, 'end_line': len(lines) or 1, 'content': content})
+            return segments
+
+        # HTML: <style>...</style>
+        if ext in {'.html', '.htm'} or language == 'html':
+            for m in re.finditer(r'<style[^>]*>(.*?)</style>', content, flags=re.DOTALL | re.IGNORECASE):
+                inner = m.group(1)
+                start_line = content[:m.start(1)].count('\n') + 1
+                end_line = start_line + inner.count('\n')
+                segments.append({'start_line': start_line, 'end_line': end_line, 'content': inner})
+
+        # JS/TS: CSS-in-JS template literals: css`...`, styled.*`...`, or any backtick string that looks like CSS
+        if language == 'javascript' or ext in {'.js', '.jsx', '.ts', '.tsx'}:
+            for m in re.finditer(r'(?:css\s*|styled\.[a-zA-Z_]\w*\s*)?`([^`]*)`', content, flags=re.DOTALL):
+                inner = m.group(1)
+                # Heuristic: treat as CSS if contains braces and colons (property: value)
+                if re.search(r':\s*[^;\n]+;?', inner) and ('{' in inner and '}' in inner):
+                    start_line = content[:m.start(1)].count('\n') + 1
+                    end_line = start_line + inner.count('\n')
+                    segments.append({'start_line': start_line, 'end_line': end_line, 'content': inner})
+
+        return segments
+
+    def _normalize_css_text(self, css: str) -> str:
+        """Normalize CSS to aid exact duplicate detection across contexts.
+        - remove comments
+        - collapse whitespace
+        - remove spaces around punctuation like : ; { } ,
+        """
+        # Remove comments
+        css = re.sub(r'/\*.*?\*/', '', css, flags=re.DOTALL)
+        # Collapse whitespace
+        css = re.sub(r'\s+', ' ', css.strip())
+        # Remove spaces around punctuation
+        css = re.sub(r'\s*([:{};,{}])\s*', r'\1', css)
+        return css
     
     def _merge_duplicate_groups(self, all_duplicates: List[Dict]) -> List[Dict]:
         """Merge overlapping duplicate groups"""

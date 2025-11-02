@@ -5,20 +5,25 @@
 # Bump part for versioning on publish: patch (default), minor, or major
 PART ?= patch
 
+# Python interpreter used to create venv (override: make PY=python3.11 venv)
+PY ?= python3
+
 help:
 	@echo "Targets:"
-	@echo "  make venv           - create local venv in venv"
+	@echo "  make venv           - create local venv in venv (PY=$(PY))"
 	@echo "  make install-dev    - install package in editable mode with dev deps"
 	@echo "  make build          - build sdist and wheel"
 	@echo "  make test           - run pytest"
 	@echo "  make publish-test   - upload to TestPyPI (auto-bump: $(PART))"
 	@echo "  make publish        - upload to PyPI (auto-bump: $(PART))"
 	@echo "Variables: PART=patch|minor|major (default: patch)"
+	@echo "           PY=python3.11 (override python used for venv)"
 	@echo "  make clean          - remove build artifacts"
 
 venv:
-	python3 -m venv venv
-	. venv/bin/activate; pip install -U pip
+	$(PY) -m venv venv
+	. venv/bin/activate; python -m ensurepip --upgrade || true
+	. venv/bin/activate; python -m pip install -U pip
 
 install-dev:
 	. venv/bin/activate; pip install -e ".[dev]"

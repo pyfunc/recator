@@ -1,0 +1,15 @@
+# Recator - Base requirements
+# The library uses only Python standard library for core functionality
+# No external dependencies required!
+
+# Optional: Development dependencies
+# pytest>=6.0
+# pytest-cov>=2.0
+# black>=21.0
+# flake8>=3.9
+# mypy>=0.9
+
+# Optional: Advanced features
+# tree-sitter>=0.20  # For better AST parsing
+# pygments>=2.10     # For syntax highlighting  
+# click>=8.0         # For enhanced CLI
